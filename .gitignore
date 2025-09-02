@@ -1,0 +1,66 @@
+/notes
+.env
+
+
+# Editor / IDE
+.vscode/
+.history/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
+
+# Temporary files
+*.tmp
+*.log
+
+# Node
+node_modules/
+/web/node_modules/
+
+# Built/static output
+/web/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging/build
+pip-wheel-metadata/
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test / cache
+.pytest_cache/
+.mypy_cache/
+.cache/
+.coverage
+coverage/
+htmlcov/
+
+# Logs and DB
+logs/
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker/local compose overrides
+docker-compose.override.yml
+
+# npm/yarn logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
