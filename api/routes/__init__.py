@@ -1,3 +1,3 @@
 from flask import Blueprint
-bp = Blueprint("api", __name__)
-from . import users, quests, submissions  # noqa
+bp = Blueprint("api", __name__, url_prefix="/api")
+from . import users, quests, submissions, auth_routes  # noqa

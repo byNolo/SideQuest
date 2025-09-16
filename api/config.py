@@ -4,6 +4,13 @@ class Config:
     REDIS_URL = os.getenv("REDIS_URL")
     JWT_SECRET = os.getenv("JWT_SECRET","changeMe")
     KEYN_JWKS_URL = os.getenv("KEYN_JWKS_URL")
+    KEYN_AUTH_SERVER_URL = os.getenv("KEYN_AUTH_SERVER_URL", "https://auth-keyn.bynolo.ca")
+    KEYN_CLIENT_ID = os.getenv("KEYN_CLIENT_ID")
+    KEYN_CLIENT_SECRET = os.getenv("KEYN_CLIENT_SECRET")
+    PUBLIC_URL = os.getenv("PUBLIC_URL", "http://localhost:8080")
+    COOKIE_NAME = os.getenv("COOKIE_NAME", "sq_token")
+    COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
+    COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "Lax")
     MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
     MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
     MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
