@@ -2,6 +2,14 @@
 
 Small SideQuest web app with Flask API + Vite/React SPA, Redis, Postgres, and MinIO. Includes KeyN (byNolo) OAuth-like login integration.
 
+## 📊 Development Progress
+
+**Current Status:** Phase 1 Complete - Quest generation with weather & location integration working!
+
+See [`PROGRESS.md`](./PROGRESS.md) for detailed development status and next steps.
+
+Quick status check: `make status`
+
 ## Prerequisites
 - Docker + Docker Compose
 - KeyN client credentials (Client ID + Secret)
@@ -25,8 +33,21 @@ docker compose up -d
 ## Common Commands
 - View status and logs:
 ```bash
-docker compose ps
-docker compose logs -f proxy
+make status          # Overall project status
+make ps              # Service status  
+make logs            # View proxy logs
+```
+- Build and deploy:
+```bash
+make up              # Start all services
+make build           # Rebuild API/web/proxy
+make restart         # Restart main services
+```
+- Development and testing:
+```bash
+make test-quest      # Test quest generation
+make health          # API health check
+make templates       # Show available quest templates
 ```
 - Build images:
 ```bash
