@@ -1,7 +1,7 @@
 # SideQuest Development Progress
 
 **Last Updated:** September 23, 2025
-**Current Phase:** Phase 1 Complete → Starting Phase 2
+**Current Phase:** Phase 1 Complete → Starting Phase 1.5 (User Onboarding)
 
 ---
 
@@ -66,11 +66,54 @@ SideQuest is a location-aware, weather-responsive daily quest app that encourage
 
 ## 🚧 **In Progress**
 
-*None - Ready for next phase*
+**Phase 1.5 - User Onboarding & Preferences** 🚧 **STARTING**
 
 ---
 
-## 📋 **Next Steps - Phase 2: Media & Submissions**
+## 📋 **Next Steps - Phase 1.5: User Onboarding & Preferences** 
+
+### **Priority 1 - User Information Collection**
+- [ ] **Location Permission & Setup**
+  - Browser geolocation API integration
+  - Location permission flow in React
+  - Fallback manual location entry (city search)
+  - Store user's default location in preferences
+
+- [ ] **Onboarding Flow**
+  - First-time user welcome screen
+  - Location setup wizard
+  - Quest preference questionnaire
+  - Privacy settings selection
+
+- [ ] **User Preferences API**
+  - `PATCH /api/me/preferences` - Update user preferences
+  - `POST /api/me/location` - Update current location
+  - `GET /api/me/profile` - Get full user profile
+  - Location history tracking (for "recent locations")
+
+### **Priority 2 - Enhanced Quest Personalization**
+- [ ] **Location-Aware Quest Generation**
+  - Use real user location instead of defaults
+  - Multiple location support (home, work, current)
+  - Location-based quest radius adaptation
+  - "Nearby places" integration with user's actual location
+
+- [ ] **Preference-Based Quest Filtering**
+  - Filter templates by user's activity preferences
+  - Respect spending limits for quest suggestions
+  - Time-based quest filtering (quick vs. extended quests)
+  - Indoor/outdoor preference handling
+
+### **Priority 3 - User Profile Management**
+- [ ] **Profile Settings Page**
+  - Edit basic info (display name, bio, avatar)
+  - Update location and radius preferences
+  - Manage quest preferences and limits
+  - Privacy settings control
+
+---
+
+## 📋 **Phase 2: Media & Submissions**
 
 ### **Priority 1 - Media Pipeline**
 - [ ] **MinIO Integration**
@@ -130,8 +173,8 @@ SideQuest is a location-aware, weather-responsive daily quest app that encourage
 - [ ] Friendship system (request, accept, block)
 - [ ] Friends-only feed
 - [ ] Web Push notifications with VAPID
-- [ ] Delivery window scheduling
-- [ ] User preference management
+- [ ] Delivery window scheduling using user preferences
+- [ ] Advanced notification customization
 
 ### **Phase 5 - Moderation & Polish** 🔮
 - [ ] Content moderation queue

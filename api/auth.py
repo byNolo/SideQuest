@@ -49,7 +49,9 @@ def _read_token_from_request():
 def require_user():
     debug_user = request.headers.get("X-Debug-User")
     if debug_user:
-        return {"id": 1, "username": debug_user}
+        # Create a unique ID based on the debug username for testing
+        user_id = hash(debug_user) % 10000 + 1  # Generate ID 1-10000 based on username
+        return {"id": user_id, "username": debug_user}
 
     token = _read_token_from_request()
     if not token:
