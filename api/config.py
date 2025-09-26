@@ -1,20 +1,33 @@
 import os
+from functools import lru_cache
+
+
 class Config:
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    REDIS_URL = os.getenv("REDIS_URL")
-    JWT_SECRET = os.getenv("JWT_SECRET","changeMe")
-    KEYN_JWKS_URL = os.getenv("KEYN_JWKS_URL")
-    KEYN_AUTH_SERVER_URL = os.getenv("KEYN_AUTH_SERVER_URL", "https://auth-keyn.bynolo.ca")
-    KEYN_CLIENT_ID = os.getenv("KEYN_CLIENT_ID")
-    KEYN_CLIENT_SECRET = os.getenv("KEYN_CLIENT_SECRET")
-    PUBLIC_URL = os.getenv("PUBLIC_URL", "http://localhost:8080")
-    COOKIE_NAME = os.getenv("COOKIE_NAME", "sq_token")
-    COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
-    COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "Lax")
-    MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
-    MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
-    MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
-    MINIO_BUCKET = os.getenv("MINIO_BUCKET","sidequest-media")
-    VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY")
-    VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
-    VAPID_SUBJECT = os.getenv("VAPID_SUBJECT")
+    """Base application configuration."""
+
+    ENV: str = os.getenv("FLASK_ENV", "development")
+    DEBUG: bool = ENV == "development"
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret")
+
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL", "postgresql+psycopg://sidequest:sidequest@db:5432/sidequest"
+    )
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
+
+    KEYN_AUTH_SERVER_URL: str = os.getenv("KEYN_AUTH_SERVER_URL", "https://auth.keyn.bynolo.ca")
+    KEYN_JWKS_URL: str | None = os.getenv("KEYN_JWKS_URL")
+    KEYN_CLIENT_ID: str | None = os.getenv("KEYN_CLIENT_ID")
+    KEYN_CLIENT_SECRET: str | None = os.getenv("KEYN_CLIENT_SECRET")
+    KEYN_REDIRECT_URI: str | None = os.getenv("KEYN_REDIRECT_URI")
+    COOKIE_NAME: str = os.getenv("COOKIE_NAME", "sq_session")
+
+    VAPID_PUBLIC_KEY: str | None = os.getenv("VAPID_PUBLIC_KEY")
+    VAPID_PRIVATE_KEY: str | None = os.getenv("VAPID_PRIVATE_KEY")
+    VAPID_SUBJECT: str | None = os.getenv("VAPID_SUBJECT")
+
+    PREFERRED_URL_SCHEME: str = os.getenv("PREFERRED_URL_SCHEME", "https")
+
+
+@lru_cache
+def get_config() -> Config:
+    return Config()

@@ -1,11 +1,7 @@
-FROM node:20-alpine as build
+FROM node:20-alpine
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json ./
+RUN npm install
 COPY . .
-RUN npm run build
-
-FROM busybox:stable
-WORKDIR /dist
-COPY --from=build /app/dist .
-VOLUME /dist
+EXPOSE 5173
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

@@ -1,103 +1,69 @@
-# SideQuest
+# SideQuest (Clean Rebuild)
 
-Small SideQuest web app with Flask API + Vite/React SPA, Redis, Postgres, and MinIO. Includes KeyN (byNolo) OAuth-like login integration.
+This repository contains a fresh SideQuest scaffold:
 
-## 📊 Development Progress
+- **Backend:** Flask 3 + SQLAlchemy + PostgreSQL
+- **Frontend:** React 18 + Vite + Tailwind
+- **Auth:** KeyN SSO integration stub with debug-header fallback
 
-**Current Status:** Phase 1 Complete - Quest generation with weather & location integration working!
+The goal is to provide a minimal, reliable starting point that you can iterate on quickly without fighting legacy scaffolding.
 
-See [`PROGRESS.md`](./PROGRESS.md) for detailed development status and next steps.
+## Getting Started
 
-Quick status check: `make status`
+1. Copy the environment template and edit values as needed:
+   ```bash
+   cp .env.example .env
+   ```
 
-## Prerequisites
-- Docker + Docker Compose
-- KeyN client credentials (Client ID + Secret)
+2. Build and start the stack:
+   ```bash
+   make up
+   ```
 
-## Quick Start
-1. Copy `.env.example` → `.env` and fill required values:
-   - `DATABASE_URL` (already set for local compose)
-   - `PUBLIC_URL` (default `http://localhost:8080`)
-   - `KEYN_AUTH_SERVER_URL` (default `https://auth-keyn.bynolo.ca`)
-   - `KEYN_CLIENT_ID`, `KEYN_CLIENT_SECRET`
-   - Optional cookie settings (`COOKIE_SECURE` should be `true` when using HTTPS)
-2. Register redirect URI in KeyN to match:
-   - `http://localhost:8080/api/auth/callback`
-3. Start services:
-```bash
-docker compose up -d
+3. Visit the dev UI at <http://localhost:5173>. Set a debug username in the form and the UI will talk to the API using the `X-Debug-User` header so you can exercise the onboarding flow without OAuth.
+
+4. Backend API is exposed on <http://localhost:8001>. Quick smoke tests:
+   ```bash
+   make api-health
+   make onboarding-status
+   ```
+
+## Project Layout
+
 ```
-4. Visit the app:
-   - http://localhost:8080
+api/         Flask application (app factory, routes, models)
+web/         React + Vite frontend
+notes/       Planning documents
+ops/         Infrastructure configs (unused for now)
+```
+
+### Backend Highlights
+- `app.py` registers a single blueprint (`/api/...`).
+- `models/` currently defines `User` and `Location` with onboarding-friendly fields.
+- `routes/onboarding.py` exposes:
+  - `GET /api/me`
+  - `PATCH /api/me/preferences`
+  - `POST /api/me/location`
+  - `POST /api/me/onboarding/complete-step`
+  - `GET /api/me/onboarding/status`
+  - `GET /api/geocode?q=...`
+- `routes/quests.py` serves a placeholder quest for the current user.
+- `auth.py` auto-provisions users when `X-Debug-User` is present and will validate KeyN JWTs when configured.
+
+### Frontend Highlights
+- Minimal React app for exercising onboarding status.
+- Stores a chosen debug username in `localStorage` and sends it with every request.
+- Tailwind is wired up for rapid iteration.
 
 ## Common Commands
-- View status and logs:
-```bash
-make status          # Overall project status
-make ps              # Service status  
-make logs            # View proxy logs
-```
-- Build and deploy:
-```bash
-make up              # Start all services
-make build           # Rebuild API/web/proxy
-make restart         # Restart main services
-```
-- Development and testing:
-```bash
-make test-quest      # Test quest generation
-make health          # API health check
-make templates       # Show available quest templates
-```
-- Build images:
-```bash
-docker compose build api web proxy
-```
-- Restart services after code/config changes:
-```bash
-docker compose restart api web proxy
-```
-- Recreate the web build (if UI changes don’t appear):
-```bash
-# Fully rebuild frontend and refresh the shared dist volume
-docker compose stop proxy web
-docker volume rm sidequest_webdist
-docker compose build --no-cache web
-docker compose up -d web proxy
-```
-- Recreate everything (fresh):
-```bash
-docker compose down
-# Optional: remove volumes (DB, MinIO data will be wiped!)
-# docker volume rm sidequest_dbdata sidequest_minio sidequest_webdist
+- `make up` / `make down` — start or stop the stack.
+- `make logs` — follow API logs.
+- `make reset` — destroy DB volume and rebuild everything.
+- `make web-dev` — run the Vite dev server directly on the host (optional).
 
-docker compose up -d --build
-```
+## Development Notes
+- Database migrations are not set up yet; SQLAlchemy auto-creates tables on start. Add Alembic once the schema stabilizes.
+- Redis/MinIO/Celery were intentionally omitted from this reset; add them back when you need background work or object storage.
+- KeyN OAuth routes are stubs—wire up the full flow once credentials and redirect URIs are finalized.
 
-## Auth (KeyN)
-- Login endpoints are exposed by the API:
-  - `GET /api/auth/login-url` → JSON with KeyN authorize URL
-  - `GET /api/auth/login` → Redirects to KeyN
-  - `GET /api/auth/callback` → Handles code, sets cookie
-  - `GET /api/auth/me` → Returns `{ authenticated, user? }`
-  - `POST /api/auth/logout` → Clears cookie
-- Frontend shows a “Login with KeyN” button in the header when not authenticated.
-
-## Service Ports
-- UI via Nginx proxy: http://localhost:8080
-- API (internal to Docker): `api:8000` (proxied at `/api/`)
-- MinIO Console: exposed internally; configure `.env` to use MinIO programmatically
-
-## Troubleshooting
-- 502 from Nginx: ensure `api` service is up before `proxy`:
-```bash
-docker compose up -d db redis minio api
-sleep 2
-docker compose up -d proxy
-```
-- Login URL 500: check `.env` for `KEYN_CLIENT_ID`/`KEYN_CLIENT_SECRET` and that `PUBLIC_URL` is correct.
-- UI changes not visible: rebuild `web` and reset `sidequest_webdist` volume (see above).
-
-## Notes
-- Dev server uses Flask’s built-in server; for production, swap to a WSGI server (e.g., gunicorn + proper health checks).
-- See `notes/KEYN_INTEGRATION.md` for more KeyN details.
+Happy building! 🚀

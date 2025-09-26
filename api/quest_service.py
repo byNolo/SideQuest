@@ -234,13 +234,16 @@ class QuestGenerator:
             # Get user info (or create basic user if doesn't exist for debug)
             user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
             if not user:
-                # For debug/demo purposes, create a basic user record without explicit ID
-                # Let the database assign the ID
+                # For debug/demo purposes, create a basic user record
                 user = User(
                     username=f"user_{user_id}",
                     display_name=f"User {user_id}",
                     privacy="public",
-                    prefs={}
+                    prefs={},
+                    # Default to Vancouver for demo users
+                    default_lat=49.2827,
+                    default_lon=-123.1207,
+                    location_radius_km=2.0
                 )
                 db.add(user)
                 db.commit()
@@ -248,15 +251,16 @@ class QuestGenerator:
                 # Update user_id to match the actual database ID
                 user_id = user.id
             
-            # Get user location (from prefs or recent location)
-            user_prefs = user.prefs or {}
-            lat = user_prefs.get("default_lat", 49.2827)  # Default to Vancouver
-            lon = user_prefs.get("default_lon", -123.1207)
+            # Get user location and preferences
+            lat = user.default_lat or 49.2827  # Default to Vancouver if no location set
+            lon = user.default_lon or -123.1207
+            radius_km = user.location_radius_km or 2.0
+            quest_prefs = user.quest_preferences or {}
             
             # Get weather
             weather = self.get_weather(lat, lon)
             
-            # Select appropriate templates based on weather and user prefs
+            # Select appropriate templates based on weather, user prefs, and onboarding
             templates = db.execute(
                 select(QuestTemplate).where(QuestTemplate.enabled == True)
             ).scalars().all()
@@ -264,9 +268,43 @@ class QuestGenerator:
             if not templates:
                 return None
             
-            # Filter templates based on weather conditions
+            # Filter templates based on user preferences if onboarding is complete
             suitable_templates = []
-            for template in templates:
+            if user.onboarding_completed and quest_prefs:
+                for template in templates:
+                    # Check activity preferences
+                    activity_prefs = quest_prefs.get("activities", [])
+                    if activity_prefs:
+                        template_activities = set(template.tags)
+                        user_activities = set(activity_prefs)
+                        if not template_activities.intersection(user_activities):
+                            continue
+                    
+                    # Check indoor/outdoor preference
+                    indoor_pref = quest_prefs.get("indoor_preference")
+                    if indoor_pref == "indoor_only" and template.requires_place:
+                        continue
+                    elif indoor_pref == "outdoor_only" and not template.requires_place:
+                        continue
+                    
+                    # Check spending preferences
+                    willing_to_spend = quest_prefs.get("willing_to_spend", True)
+                    if not willing_to_spend and "requires_spending" in template.tags:
+                        continue
+                    
+                    # Check time constraints
+                    max_time = quest_prefs.get("max_time_minutes")
+                    if max_time and max_time < 30 and "extended" in template.tags:
+                        continue
+                    
+                    suitable_templates.append(template)
+            else:
+                # For new users or incomplete onboarding, use all templates
+                suitable_templates = list(templates)
+            
+            # Filter templates based on weather conditions
+            weather_filtered = []
+            for template in suitable_templates:
                 constraints = template.constraints or {}
                 
                 # Check weather constraints
@@ -274,17 +312,17 @@ class QuestGenerator:
                     indoor_conditions = constraints["indoor_bias_if"]
                     if any(tag in weather.tags for tag in indoor_conditions):
                         if not template.requires_place:  # Prefer indoor quests in bad weather
-                            suitable_templates.append(template)
+                            weather_filtered.append(template)
                         continue
                 
-                suitable_templates.append(template)
+                weather_filtered.append(template)
             
-            if not suitable_templates:
-                suitable_templates = templates
+            if not weather_filtered:
+                weather_filtered = suitable_templates or templates
             
             # Weighted selection by rarity
             weights = []
-            for template in suitable_templates:
+            for template in weather_filtered:
                 if template.rarity == "common":
                     weights.append(10)
                 elif template.rarity == "rare":
@@ -300,10 +338,10 @@ class QuestGenerator:
             random.seed(int(seed[:8], 16))
             
             # Select template
-            selected_template = random.choices(suitable_templates, weights=weights)[0]
+            selected_template = random.choices(weather_filtered, weights=weights)[0]
             
-            # Generate quest context
-            context = self._generate_quest_context(selected_template, lat, lon, weather)
+            # Generate quest context using user's actual location and preferences
+            context = self._generate_quest_context(selected_template, lat, lon, weather, radius_km, quest_prefs)
             
             # Create quest record
             quest = Quest(
@@ -327,18 +365,26 @@ class QuestGenerator:
             
             return self._format_quest_response(quest, db)
     
-    def _generate_quest_context(self, template: QuestTemplate, lat: float, lon: float, weather: Optional[WeatherInfo]) -> Dict:
-        """Generate specific context for a quest based on template"""
+    def _generate_quest_context(self, template: QuestTemplate, lat: float, lon: float, 
+                              weather: Optional[WeatherInfo], radius_km: float = 2.0, 
+                              quest_prefs: Dict = None) -> Dict:
+        """Generate specific context for a quest based on template and user preferences"""
         context = {}
         constraints = template.constraints or {}
+        quest_prefs = quest_prefs or {}
         
         # Handle place requirements
         if template.requires_place and "place_types" in constraints:
             place_types = constraints["place_types"]
-            radius_range = constraints.get("radius_km_range", [0.5, 2.0])
-            radius = random.uniform(radius_range[0], radius_range[1])
             
-            places = self.find_places(lat, lon, place_types, radius)
+            # Use user's preferred radius or constraint range
+            if radius_km:
+                actual_radius = radius_km
+            else:
+                radius_range = constraints.get("radius_km_range", [0.5, 2.0])
+                actual_radius = random.uniform(radius_range[0], radius_range[1])
+            
+            places = self.find_places(lat, lon, place_types, actual_radius)
             if places:
                 selected_place = random.choice(places[:5])  # Pick from top 5 closest
                 context["place"] = {
@@ -350,7 +396,7 @@ class QuestGenerator:
             else:
                 context["place_type"] = random.choice(place_types)
             
-            context["radius_km"] = round(radius, 1)
+            context["radius_km"] = round(actual_radius, 1)
         
         # Handle other dynamic elements
         for key, options in constraints.items():
@@ -368,6 +414,19 @@ class QuestGenerator:
                 context["modifier"] = random.choice(["snow patterns", "winter activities", "frost details"])
             else:
                 context["modifier"] = random.choice(["interesting textures", "unique angles", "natural framing"])
+        
+        # Add preference-aware context
+        if quest_prefs:
+            # Adjust based on time preferences
+            max_time = quest_prefs.get("max_time_minutes")
+            if max_time and max_time <= 15:
+                context["time_hint"] = "quick"
+            elif max_time and max_time <= 30:
+                context["time_hint"] = "brief"
+            
+            # Adjust based on spending preferences
+            if not quest_prefs.get("willing_to_spend", True):
+                context["cost_note"] = "Focus on free activities"
         
         return context
     

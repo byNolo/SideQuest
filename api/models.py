@@ -12,12 +12,29 @@ class User(Base):
     bio: Mapped[str | None] = mapped_column(Text)
     avatar_url: Mapped[str | None] = mapped_column(String(255))
     privacy: Mapped[str] = mapped_column(String(16), default="public")  # public | friends_only
-    # Preferences: willing_to_spend, max_spend_daily, max_spend_weekly, max_time_minutes, travel_radius_km, default_location, delivery_windows
+    
+    # Onboarding status
+    onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    onboarding_step: Mapped[str | None] = mapped_column(String(32))  # location, preferences, notifications, complete
+    
+    # Location preferences
+    default_lat: Mapped[float | None] = mapped_column(Float)
+    default_lon: Mapped[float | None] = mapped_column(Float)
+    default_location_name: Mapped[str | None] = mapped_column(String(255))
+    location_radius_km: Mapped[float] = mapped_column(Float, default=2.0)
+    
+    # Quest preferences
+    quest_preferences: Mapped[dict] = mapped_column(JSON, default=dict)  # activity types, indoor/outdoor, spending, time
+    
+    # General preferences: willing_to_spend, max_spend_daily, max_spend_weekly, max_time_minutes, travel_radius_km, delivery_windows
     prefs: Mapped[dict] = mapped_column(JSON, default=dict)
     webpush_endpoint: Mapped[str | None] = mapped_column(String(512))
     webpush_keys: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_active_at: Mapped[datetime | None] = mapped_column(DateTime)
+    locations: Mapped[list["Location"]] = relationship(
+        "Location", back_populates="user", cascade="all, delete-orphan"
+    )
 
 class QuestTemplate(Base):
     __tablename__ = "quest_templates"
@@ -81,11 +98,13 @@ class Location(Base):
     __tablename__ = "locations"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    name: Mapped[str | None] = mapped_column(String(255))
     lat: Mapped[float] = mapped_column(Float)
     lon: Mapped[float] = mapped_column(Float)
     precision_m: Mapped[float | None] = mapped_column(Float)
-    source: Mapped[str] = mapped_column(String(16))  # browser | manual
+    source: Mapped[str] = mapped_column(String(16))  # browser | manual | geocode
     recorded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    user: Mapped[User] = relationship("User", back_populates="locations")
 
 class Streak(Base):
     __tablename__ = "streaks"

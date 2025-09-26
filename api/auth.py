@@ -1,73 +1,71 @@
-import os, jwt, requests, time
-from flask import request, abort
-from config import Config
+from __future__ import annotations
 
-_jwks_cache = {"keys": None, "ts": 0}
+import functools
+from typing import Callable
 
-def _get_jwks():
-    url = Config.KEYN_JWKS_URL or f"{Config.KEYN_AUTH_SERVER_URL}/.well-known/jwks.json"
-    now = time.time()
-    if _jwks_cache["keys"] and now - _jwks_cache["ts"] < 300:
-        return _jwks_cache["keys"]
-    try:
-        r = requests.get(url, timeout=5)
-        r.raise_for_status()
-        _jwks_cache["keys"] = r.json()
-        _jwks_cache["ts"] = now
-        return _jwks_cache["keys"]
-    except Exception:
-        return None
+from flask import abort, g, request
+from sqlalchemy import select
 
-def _decode_with_jwks(token: str):
-    jwks = _get_jwks()
-    if not jwks:
-        return None
-    try:
-        from jwt import algorithms
-        unverified_header = jwt.get_unverified_header(token)
-        kid = unverified_header.get("kid")
-        key = None
-        for k in jwks.get("keys", []):
-            if k.get("kid") == kid:
-                key = algorithms.RSAAlgorithm.from_jwk(k)
-                break
-        if not key:
-            return None
-        return jwt.decode(token, key=key, algorithms=["RS256", "RS512"], options={"verify_aud": False})
-    except Exception:
-        return None
+from database import session_scope
+from models import User
+from services.keyn import keyn_client
 
-def _read_token_from_request():
-    auth = request.headers.get("Authorization", "")
-    if auth.startswith("Bearer "):
-        return auth.split(" ", 1)[1]
-    cookie_name = Config.COOKIE_NAME
-    if cookie_name in request.cookies:
-        return request.cookies.get(cookie_name)
-    return None
 
-def require_user():
+def _ensure_user(username: str, display_name: str | None = None, email: str | None = None) -> User:
+    with session_scope() as session:
+        user = session.execute(select(User).where(User.username == username)).scalar_one_or_none()
+        if user:
+            return user
+        user = User(
+            username=username,
+            display_name=display_name or username,
+            email=email,
+            quest_preferences={},
+            prefs={}
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+        return user
+
+
+def get_current_user() -> User | None:
     debug_user = request.headers.get("X-Debug-User")
     if debug_user:
-        # Create a unique ID based on the debug username for testing
-        user_id = hash(debug_user) % 10000 + 1  # Generate ID 1-10000 based on username
-        return {"id": user_id, "username": debug_user}
+        return _ensure_user(debug_user)
 
-    token = _read_token_from_request()
-    if not token:
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+
+    token = auth_header.split(" ", 1)[1]
+    payload = keyn_client.decode_token(token)
+    if payload is None:
         abort(401)
 
-    # Try verifying against JWKS
-    payload = _decode_with_jwks(token)
-    if payload is None:
-        # Fallback to non-verifying decode only for dev
-        try:
-            payload = jwt.decode(token, options={"verify_signature": False})
-        except Exception:
-            abort(401)
+    username = payload.get("preferred_username") or payload.get("username")
+    if not username:
+        abort(401)
 
-    return {
-        "id": payload.get("sub") or payload.get("id"),
-        "username": payload.get("preferred_username") or payload.get("username") or "user",
-        "scopes": payload.get("scope") or payload.get("scopes"),
-    }
+    return _ensure_user(
+        username=username,
+        display_name=payload.get("name") or username,
+        email=payload.get("email"),
+    )
+
+
+def require_user() -> User:
+    user = get_current_user()
+    if user is None:
+        abort(401)
+    return user
+
+
+def login_required(func: Callable):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        user = require_user()
+        g.current_user = user
+        return func(*args, **kwargs)
+
+    return wrapper

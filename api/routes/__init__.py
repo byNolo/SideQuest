@@ -1,3 +1,6 @@
 from flask import Blueprint
+
 bp = Blueprint("api", __name__, url_prefix="/api")
-from . import users, quests, submissions, auth_routes  # noqa
+
+# Import route modules so they register their handlers with the blueprint
+from . import auth, health, onboarding, quests  # noqa: E402,F401

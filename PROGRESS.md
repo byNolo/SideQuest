@@ -1,7 +1,7 @@
 # SideQuest Development Progress
 
-**Last Updated:** September 23, 2025
-**Current Phase:** Phase 1 Complete → Starting Phase 1.5 (User Onboarding)
+**Last Updated:** September 26, 2025
+**Current Phase:** Phase 1.5 (User Onboarding) → Active Sprint
 
 ---
 
@@ -66,7 +66,7 @@ SideQuest is a location-aware, weather-responsive daily quest app that encourage
 
 ## 🚧 **In Progress**
 
-**Phase 1.5 - User Onboarding & Preferences** 🚧 **STARTING**
+**Phase 1.5 - User Onboarding & Preferences** 🚧 **ACTIVE**
 
 ---
 
@@ -74,22 +74,29 @@ SideQuest is a location-aware, weather-responsive daily quest app that encourage
 
 ### **Priority 1 - User Information Collection**
 - [ ] **Location Permission & Setup**
-  - Browser geolocation API integration
-  - Location permission flow in React
-  - Fallback manual location entry (city search)
-  - Store user's default location in preferences
+  - [x] Browser geolocation API integration (debug onboarding panel)
+  - [x] Location permission flow in React (debug onboarding panel)
+  - [x] Fallback manual location entry (city search)
+  - [x] Store user's default location in preferences
 
 - [ ] **Onboarding Flow**
-  - First-time user welcome screen
-  - Location setup wizard
-  - Quest preference questionnaire
-  - Privacy settings selection
+  - [x] First-time user welcome screen
+  - [x] Location setup wizard (debug panel onboarding page)
+  - [x] Quest preference questionnaire
+  - [x] Privacy settings selection
 
 - [ ] **User Preferences API**
-  - `PATCH /api/me/preferences` - Update user preferences
-  - `POST /api/me/location` - Update current location
-  - `GET /api/me/profile` - Get full user profile
-  - Location history tracking (for "recent locations")
+  - [x] `PATCH /api/me/preferences` - Update user preferences
+  - [x] `POST /api/me/location` - Update current location
+  - [x] `GET /api/me` - Fetch consolidated profile snapshot
+  - [x] `POST /api/me/notifications/register` - Store simulated push subscription
+  - [ ] Location history tracking (for "recent locations")
+
+- [ ] **Notification Opt-in (Web Push)**
+  - [x] Debug onboarding UI to simulate push registration
+  - [x] Backend endpoints to save/clear web push subscription data
+  - [ ] Service worker subscription flow with real browser prompts
+  - [ ] User-facing copy for permissions & troubleshooting
 
 ### **Priority 2 - Enhanced Quest Personalization**
 - [ ] **Location-Aware Quest Generation**
@@ -216,6 +223,12 @@ leaderboard_snapshots, moderation_flags
 - `GET /api/quests/today` - Quest generation (with/without auth)
 - `GET /api/templates` - Template listing
 - `POST /api/admin/seed-templates` - Template initialization
+- `GET /api/me` - Consolidated user profile for onboarding
+- `PATCH /api/me/preferences` - Save quest and global preferences
+- `POST /api/me/location` - Persist default location
+- `POST /api/me/notifications/register` - Record simulated push subscription
+- `DELETE /api/me/notifications/register` - Clear stored push subscription
+- `GET /api/geocode/reverse` - Reverse geocode coordinates for geolocation flow
 
 ### **Verified Features** ✅
 - Weather API integration (real-time data)
@@ -224,6 +237,11 @@ leaderboard_snapshots, moderation_flags
 - Database migrations (Alembic)
 - Frontend quest display (weather, difficulty, context)
 - Docker container orchestration
+- Onboarding wizard with location search, preference saving, and debug push opt-in
+- Geolocation-assisted location setup with reverse geocoding
+- Privacy controls surfaced during onboarding and dashboard snapshot
+- Welcome hero for first-time onboarding to guide initial setup
+- Dashboard timeout + helpful error messaging for unreachable API scenarios
 
 ---
 
