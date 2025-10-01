@@ -1,7 +1,14 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Date, JSON, Float, UniqueConstraint, Text
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Date, JSON, Float, UniqueConstraint, Text, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
 from database import Base
+import enum
+
+class QuestRarity(enum.Enum):
+    COMMON = "common"
+    UNCOMMON = "uncommon" 
+    RARE = "rare"
+    LEGENDARY = "legendary"
 
 class User(Base):
     __tablename__ = "users"
@@ -144,3 +151,17 @@ class ModerationFlag(Base):
     signals: Mapped[dict | None] = mapped_column(JSON)  # heuristics snapshot
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+class QuestTemplate(Base):
+    __tablename__ = "quest_templates"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    location_type: Mapped[list] = mapped_column(JSON, nullable=False)  # List of place types
+    weather_conditions: Mapped[list] = mapped_column(JSON, nullable=False)  # List of weather conditions
+    difficulty: Mapped[int] = mapped_column(Integer, nullable=False, default=1)  # 1-5 scale
+    rarity: Mapped[QuestRarity] = mapped_column(SQLAlchemyEnum(QuestRarity), nullable=False, default=QuestRarity.COMMON)
+    metadata: Mapped[dict | None] = mapped_column(JSON)  # Additional template data
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

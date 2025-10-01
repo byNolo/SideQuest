@@ -1,7 +1,7 @@
 # SideQuest Development Progress
 
 **Last Updated:** September 26, 2025
-**Current Phase:** Phase 1.5 (User Onboarding) → Active Sprint
+**Current Phase:** Phase 2 Active - Media & Submissions System 🚧
 
 ---
 
@@ -18,36 +18,53 @@ SideQuest is a location-aware, weather-responsive daily quest app that encourage
 ### **Phase 0 - Infrastructure & Auth** ✅ **COMPLETE**
 - [x] **Docker Infrastructure** - PostgreSQL, Redis, MinIO, Nginx all configured
 - [x] **KeyN OAuth Integration** - Full login/logout flow with JWT tokens
-- [x] **Database Schema** - All 11 tables implemented with Alembic migrations
+- [x] **Database Schema** - All core tables implemented with Alembic migrations
 - [x] **Basic API Skeleton** - Health, auth, and core endpoints
 - [x] **React Frontend** - Basic UI with authentication flow
 - [x] **Alembic Setup** - Database migrations working properly
 
-### **Phase 1 - Quests Core** ✅ **COMPLETE**
-- [x] **Quest Templates System** 
-  - 6 diverse templates (Neighborhood Snapshot, Weather Witness, Urban Explorer, Street Artist, Social Connection, Seasonal Treasure)
-  - Rarity system (common, rare, legendary)
-  - Constraint-based generation
-  - Template seeding and management
+### **Phase 1 - Quest Template System** ✅ **COMPLETE**
+- [x] **QuestTemplate Database Model** 
+  - Comprehensive template schema with rarity, categories, constraints
+  - Weather conditions and location type filtering
+  - Difficulty levels and time estimates
+  - JSONB metadata fields for flexible template data
+
+- [x] **Template-Driven Quest Generation**
+  - Advanced quest selection algorithm using user preferences, weather, and location
+  - Deterministic generation (consistent daily quests per user)
+  - Weather-aware template filtering and selection
+  - Weighted rarity-based selection (common/rare/legendary)
+  - Context-aware placeholder replacement for dynamic quest text
+
+- [x] **8 Diverse Quest Templates Seeded**
+  - Outdoor Photography Challenge (photography, weather-dependent)
+  - Local History Explorer (education, indoor/outdoor)
+  - Rainy Day Adventure (indoor exploration, weather-reactive)
+  - Culinary Quest (food experiences, social interaction)
+  - Perfect Weather Walk (wellness, clear weather optimal)
+  - Community Connection (volunteering, social engagement)
+  - Urban Explorer (discovery, documentation)
+  - Legendary Challenge (extreme weather adventures)
 
 - [x] **Weather Integration**
-  - Open-Meteo API integration
-  - Real-time weather data fetching
-  - Weather-aware quest modifiers
-  - Caching system for API efficiency
+  - Open-Meteo API integration for real-time weather data
+  - Weather condition mapping (clear, cloudy, rainy, snowy, etc.)
+  - Temperature, humidity, and weather code processing
+  - Template filtering based on current weather conditions
 
 - [x] **Location & Place Lookup**
   - OpenStreetMap/Overpass API integration
-  - Dynamic place finding based on quest requirements
-  - Distance calculation and sorting
-  - Place type filtering
+  - Dynamic place discovery based on template requirements
+  - Multiple location type support (parks, museums, cafes, etc.)
+  - Distance-based filtering and sorting
+  - Geocoding integration for address resolution
 
-- [x] **Quest Generation Engine**
-  - User-specific personalized quests
-  - Deterministic generation (same quest per user per day)
-  - Weather-responsive template selection
-  - Weighted rarity-based selection
-  - Context-aware placeholder replacement
+- [x] **Database Migration System**
+  - Alembic configured with quest_templates table
+  - QuestRarity enum (common, rare, legendary)
+  - JSONB fields for flexible metadata storage
+  - Template seeding system for initial data
 
 - [x] **Enhanced Frontend**
   - Rich quest display with weather info
@@ -66,7 +83,80 @@ SideQuest is a location-aware, weather-responsive daily quest app that encourage
 
 ## 🚧 **In Progress**
 
-**Phase 1.5 - User Onboarding & Preferences** 🚧 **ACTIVE**
+### **Phase 2 - Media & Submissions System** 🚧 **ACTIVE**
+
+- [x] **MinIO Media Pipeline**
+  - MinIO service configured and running (ports 9000/9001)
+  - Bucket creation and management
+  - Pre-signed URL generation for secure uploads
+  - File upload endpoints with size and type validation
+  - Thumbnail generation for images using Pillow
+  - File deduplication using SHA-256 hashing
+
+- [x] **Submission Database Models**
+  - Submission model with quest linking, media storage, status tracking
+  - Vote model for future rating system
+  - Database migration completed with new schema
+  - JSONB fields for flexible media metadata
+
+- [x] **Submission API Endpoints**
+  - `POST /api/submissions` - Create quest submission
+  - `GET /api/submissions/<id>` - Get specific submission
+  - `PATCH /api/submissions/<id>` - Update submission (owner only)
+  - `DELETE /api/submissions/<id>` - Delete submission (owner only)
+  - `GET /api/submissions/feed` - Global submissions feed with pagination
+  - `GET /api/submissions/my` - User's own submissions
+
+- [x] **Media Upload API**
+  - `POST /api/media/upload-url` - Generate pre-signed upload URLs
+  - `POST /api/media/upload` - Direct file upload with progress
+  - `GET /api/media/<object_name>` - Get media viewing URLs
+  - `DELETE /api/media/<object_name>` - Delete media files (owner only)
+  - Automatic thumbnail generation for images
+
+- [x] **Frontend Media Components**
+  - MediaUpload component with drag-and-drop support
+  - SubmissionForm component for quest completion
+  - File type validation and progress indicators
+  - Thumbnail display and file management
+  - Error handling and user feedback
+
+### **Phase 2 - Next Priorities**
+- [ ] **Feed Implementation UI**
+  - Create Feed page component with infinite scroll
+  - Media display with lightbox/modal viewing
+  - User profile integration in feed items
+  - Filter and sort options for submissions
+
+- [ ] **Enhanced Media Processing**
+  - Video thumbnail generation
+  - EXIF data extraction and privacy sanitization
+  - Image compression and multiple size variants
+  - Content moderation integration
+
+---
+
+## ✅ **Recently Completed - Phase 2 Sprint**
+
+1. **Media Infrastructure Setup**
+   - Configured MinIO object storage service
+   - Added media processing dependencies (Pillow, Celery)
+   - Set up secure pre-signed URL system for uploads
+
+2. **Database Schema Extension**
+   - Migrated to modular model structure
+   - Added Submission and Vote models with JSONB fields
+   - Reset Alembic migration system with fresh baseline
+
+3. **Complete Submission System**
+   - Built full CRUD API for quest submissions
+   - Implemented media upload with validation and thumbnails
+   - Created React components for media upload and submission
+
+4. **File Management Features**
+   - Automatic thumbnail generation for images
+   - File deduplication using content hashing
+   - Owner-based access control for media files
 
 ---
 

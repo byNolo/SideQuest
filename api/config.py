@@ -14,6 +14,13 @@ class Config:
     )
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
+    # MinIO Configuration
+    MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT", "minio:9000")
+    MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "sidequest")
+    MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "sidequest123")
+    MINIO_SECURE: bool = os.getenv("MINIO_SECURE", "false").lower() == "true"
+    MINIO_BUCKET_NAME: str = os.getenv("MINIO_BUCKET_NAME", "sidequest-media")
+
     KEYN_AUTH_SERVER_URL: str = os.getenv("KEYN_AUTH_SERVER_URL", "https://auth.keyn.bynolo.ca")
     KEYN_JWKS_URL: str | None = os.getenv("KEYN_JWKS_URL")
     KEYN_CLIENT_ID: str | None = os.getenv("KEYN_CLIENT_ID")

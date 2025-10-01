@@ -5,6 +5,7 @@ import DebugUserSelector from './components/DebugUserSelector'
 import DebugUserPrompt from './components/DebugUserPrompt'
 import HomePage from './pages/Home'
 import OnboardingPage from './pages/Onboarding'
+import SubmitQuestPage from './pages/SubmitQuest'
 
 function NavigationLink({ to, children }) {
   return (
@@ -43,6 +44,7 @@ function Layout({ children }) {
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8 lg:flex-row lg:items-start">
         <aside className="flex flex-row gap-2 overflow-x-auto pb-2 text-sm lg:w-60 lg:flex-col lg:gap-3 lg:pb-0">
           <NavigationLink to="/">Daily quest</NavigationLink>
+          <NavigationLink to="/submit">Submit quest</NavigationLink>
           <NavigationLink to="/onboarding">Onboarding setup</NavigationLink>
         </aside>
 
@@ -73,6 +75,7 @@ function AppShell() {
       <Layout>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/submit" element={<SubmitQuestPage />} />
           <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
